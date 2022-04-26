@@ -19,7 +19,7 @@ J=0.0
 t1=1.0
 t2=0.0
 t3=0.0
-m=2.06
+m=2.0
 f1=1
 f2=1
 shell=2
@@ -311,12 +311,13 @@ ax1.legend(ncol = 1, loc = "upper right", handlelength = 1.25)
 gs2.tight_layout(fig2, rect = (0.0, 0.0, 1.1, 1.0), pad = 4.0)
 
 ### vertices
-fig1        = plt.figure(constrained_layout = True, figsize = get_figsize(246.0, wf = 1.2, hf = 0.45))
-gs1         = matplotlib.gridspec.GridSpec(1, 3, figure = fig1)
+
 
 for vert in range(0,3):
+    fig1        = plt.figure(constrained_layout = True, figsize = get_figsize(246.0, wf = 1.2, hf = 0.45))
+    gs1         = matplotlib.gridspec.GridSpec(1, 1, figure = fig1)
     channel=["P","C","D"][vert]
-    ax2  = fig1.add_subplot(gs1[0, vert])
+    ax2  = fig1.add_subplot(gs1[0,0])
     
     xi = np.linspace(-2.7,2.7,500)
     yi = np.linspace(-2.7,2.7,500)
@@ -330,7 +331,7 @@ for vert in range(0,3):
     x,y,z=idx2coords(coords,f1,f2,inputvertex)
     zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
     
-    ax2.title.set_text(r"$"+str(channel)+"^{1,1}(q)$")
+    ax2.title.set_text(r"$"+str(channel)+"^{"+str(f1)+","+str(f2)+"}(q)$")
     
     #ax2.set_xlabel(r"$\phi_1$")
     #ax2.set_ylabel(r"$\phi_2$")
@@ -361,6 +362,7 @@ for vert in range(0,3):
     #cbar.set_ticks([0,-5,-10,-15,-20,-25,30])
     #cbar.set_ticklabels([r"$0$", r"$-5$", r"$-10$",r"$-15$",r"$-25$",r"$-30$"])
     ax2.set_aspect(1.0)
+    fig1.savefig(subdir+"/vertices"+str(channel)+".pdf",dpi=300,bbox_inches="tight")
     
 gs1.tight_layout(fig1, rect = (0.0, 0.0, 1.1, 1.0), pad = 4.0)
 ### Bubbles
