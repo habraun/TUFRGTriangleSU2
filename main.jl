@@ -1,6 +1,6 @@
 using Distributed
 rmprocs(workers())
-addprocs(4)
+addprocs(8)
 nworkers()
 
 
@@ -46,8 +46,10 @@ function init_flow!(
         grid_bosons     = kgrid_initialization(N,shell,200,Gamma,M,K) # gamma,k,m
         bubbles         = bubbles_initialization(L,grid_bosons.N,shell)
         grid_r          = rgrid_initialization(Int64(ceil(sqrt(grid_bosons.N))))
-        fv              = fouriervertex_initialization(L,grid_r,shell)
-        v               = vertex_initialization(L,grid_bosons.N)
+        fv              = fouriervertex_initialization(L,grid_r,shell) #fw
+        v               = vertex_initialization(L,grid_bosons.N) #w #call them twice , once for v and once for w
+        fw              = fouriervertex_initialization(L,grid_r,shell)
+        w               = vertex_initialization(L,grid_bosons.N)
 
 
         println("Momenta:")
@@ -57,7 +59,7 @@ function init_flow!(
 
 
         #Calculate Flow
-        LambdaArr,pmax,cmax,dmax,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv)
+        LambdaArr,pmaxv,pmaxw,cmaxv,cmaxw,dmaxv,dmaxw,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv,w,fw)# add two arguments w and fw
 
         ################################################################################
         #prepare supplemental information for plotting
@@ -91,22 +93,32 @@ function init_flow!(
 
         #Use superconducting vertex c_sc to calculate leading gap functions
 
-        leadingvals,leadingvecs,sc,vPbuff=gapper(v,grid_bosons)
+        leadingvalsv,leadingvecsv,scv,vPbuffv=gapper(v,grid_bosons) #double it, once on v once on w
+        leadingvalsw,leadingvecsw,scw,vPbuffw=gapper(w,grid_bosons)
 
-        jldopen("triangle"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*".jld", "w") do file
-            write(file, "SC", sc)  # alternatively, say "@write file A"
-            write(file, "VP", v.P)
-            write(file, "VPbuff", vPbuff)
+        jldopen(outputdir+"triangle"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*".jld", "w") do file
+            write(file, "SCv", scv)  # alternatively, say "@write file A"
+            write(file, "VPv", v.P)
+            write(file, "VPbuffv", vPbuffv)
+            write(file, "SCw", scw)  # alternatively, say "@write file A"
+            write(file, "VPw", w.P)
+            write(file, "VPbuffw", vPbuffw)
         end
 
-        h5open("triangle"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*".h5", "w") do file
-                write(file, "p", real.(v.P))
-                write(file, "c", real.(v.C))
-                write(file, "d", real.(v.D))
+        h5open(outputdir+"triangle"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*".h5", "w") do file
+                write(file, "pv", real.(v.P)) # save also w etc.
+                write(file, "cv", real.(v.C))
+                write(file, "dv", real.(v.D))
+                write(file, "pw", real.(w.P)) # save also w etc.
+                write(file, "cw", real.(w.C))
+                write(file, "dw", real.(w.D))
 
-                write(file, "pmax", abs.(pmax))
-                write(file, "cmax", abs.(cmax))
-                write(file, "dmax", abs.(dmax))
+                write(file, "pmaxv", abs.(pmaxv))
+                write(file, "cmaxv", abs.(cmaxv))
+                write(file, "dmaxv", abs.(dmaxv))
+                write(file, "pmaxw", abs.(pmaxw))
+                write(file, "cmaxw", abs.(cmaxw))
+                write(file, "dmaxw", abs.(dmaxw))
 
                 write(file, "Lambda", abs.(LambdaArr))
 
@@ -118,9 +130,11 @@ function init_flow!(
         end
 
 
-        h5open("triangleSC"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*".h5", "w") do file
-                write(file, "leadingvecs1111", leadingvecs)
-                write(file, "leadingvals1111", leadingvals)
+        h5open(outputdir+"triangleSC"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*".h5", "w") do file
+                write(file, "leadingvecs1111v", leadingvecsv)
+                write(file, "leadingvals1111v", leadingvalsv)
+                write(file, "leadingvecs1111w", leadingvecsw)
+                write(file, "leadingvals1111w", leadingvalsw)
                 write(file,"coords",coordsarr)
         end
 

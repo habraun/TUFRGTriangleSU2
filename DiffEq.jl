@@ -20,7 +20,9 @@ steps have been calcul or if the scale 10.0^-4 is reached.
     bubbles     ::bubble,
     grid_r      ::rgrid,
     v           ::vertices,
-    fv          ::fouriervertices
+    fv          ::fouriervertices,
+    w           ::vertices,
+    fw          ::fouriervertices
     )
 
     #Set initial conditions#####################################################
@@ -33,6 +35,9 @@ steps have been calcul or if the scale 10.0^-4 is reached.
     v.p0[1,1,:] .=U
     v.c0[1,1,:] .=U
     v.d0[1,1,:] .=U
+    w.p0[1,1,:] .=U
+    w.c0[1,1,:] .=U
+    w.d0[1,1,:] .=U
 
     v2_Arr  = [10,11,14,15,18,19]
     v3_Arr  = [8,9,12,13,16,17]
@@ -50,6 +55,19 @@ steps have been calcul or if the scale 10.0^-4 is reached.
 
         v.p0[v3_Arr[m-1],v3_Arr[m-1],:].+=V3
         v.c0[v3_Arr[m-1],v3_Arr[m-1],:].+=V3
+
+        w.p0[m,m,:].+=(-J/4)
+        w.c0[m,m,:].+=(-J/4)
+        w.d0[m,m,:].+=(-J/2)
+
+        w.p0[m,m,:].+=V1
+        w.c0[m,m,:].+=V1
+
+        w.p0[v2_Arr[m-1],v2_Arr[m-1],:].+=V2
+        w.c0[v2_Arr[m-1],v2_Arr[m-1],:].+=V2
+
+        w.p0[v3_Arr[m-1],v3_Arr[m-1],:].+=V3
+        w.c0[v3_Arr[m-1],v3_Arr[m-1],:].+=V3
     end
 
     #==
@@ -73,6 +91,13 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         v.p0[5,4,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[4],grid_r.r1,grid_r.r2)
         v.p0[6,7,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[7],grid_r.r1,grid_r.r2)
         v.p0[7,6,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[6],grid_r.r1,grid_r.r2)
+
+        w.p0[2,3,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[3],grid_r.r1,grid_r.r2)
+        w.p0[3,2,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[2],grid_r.r1,grid_r.r2)
+        w.p0[4,5,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[5],grid_r.r1,grid_r.r2)
+        w.p0[5,4,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[4],grid_r.r1,grid_r.r2)
+        w.p0[6,7,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[7],grid_r.r1,grid_r.r2)
+        w.p0[7,6,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[6],grid_r.r1,grid_r.r2)
     end
 
 
@@ -86,6 +111,10 @@ steps have been calcul or if the scale 10.0^-4 is reached.
             v.d0[1,1,qi]+=V1*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
             v.d0[1,1,qi]+=V2*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[v2_Arr[m-1]],grid_r.r1,grid_r.r2)
             v.d0[1,1,qi]+=V3*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[v3_Arr[m-1]],grid_r.r1,grid_r.r2)
+
+            w.d0[1,1,qi]+=V1*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
+            w.d0[1,1,qi]+=V2*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[v2_Arr[m-1]],grid_r.r1,grid_r.r2)
+            w.d0[1,1,qi]+=V3*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[v3_Arr[m-1]],grid_r.r1,grid_r.r2)
 
             #spinlful
             #v.c0[1,1,qi]-=(V1/1)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
@@ -116,16 +145,21 @@ steps have been calcul or if the scale 10.0^-4 is reached.
     IterMax     = 400
     LambdaMin   = 10.0^-6
     vstop       = (findmax(energiesC)[1]-findmin(energiesC)[1])*3.0
+    wstop       = vstop
 
     Lambda      = (findmax(energiesC)[1]-findmin(energiesC)[1])*1.05
     dLambda     = 0.05*Lambda
 
-    increments  = incrementvertices_initialization(bubbles.L,grid_bosons.N)
+    incrementsv  = incrementvertices_initialization(bubbles.L,grid_bosons.N)
+    incrementsw  = incrementvertices_initialization(bubbles.L,grid_bosons.N)
 
     LambdaArr   = []
-    pmax        = []
-    cmax        = []
-    dmax        = []
+    pmaxv        = []
+    cmaxv        = []
+    dmaxv        = []
+    pmaxw        = []
+    cmaxw        = []
+    dmaxw        = []
 
     inc         = []
 
@@ -156,13 +190,19 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         println("Calculate Increment")
 
 
-        increment!(increments,bubbles,Lambda,t,t2,t3,mu,v,fv,grid_bosons,grid_r)
+        increment!(incrementsv,incrementsw,bubbles,Lambda,t,t2,t3,mu,v,fv,w,fw,grid_bosons,grid_r)
 
-        v.P .+= increments.P.*dLambda
-        v.C .+= increments.C.*dLambda
-        v.D .+= increments.D.*dLambda
+        v.P .+= incrementsv.P.*dLambda
+        v.C .+= incrementsv.C.*dLambda
+        v.D .+= incrementsv.D.*dLambda
+
+        w.P .+= incrementsw.P.*dLambda
+        w.C .+= incrementsw.C.*dLambda
+        w.D .+= incrementsw.D.*dLambda
 
         Vsymmetrizer!(v,bubbles,grid_bosons)
+        Vsymmetrizer!(w,bubbles,grid_bosons)
+
 
         vmaxp   = maximum(real.(v.P))
         vminp   = maximum(real.(-v.P))
@@ -170,6 +210,13 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         vminc   = maximum(real.(-v.C))
         vmaxd   = maximum(real.(v.D))
         vmind   = maximum(real.(-v.D))
+
+        wmaxp   = maximum(real.(w.P))
+        wminp   = maximum(real.(-w.P))
+        wmaxc   = maximum(real.(w.C))
+        wminc   = maximum(real.(-w.C))
+        wmaxd   = maximum(real.(w.D))
+        wmind   = maximum(real.(-w.D))
 
 
         println("Check for instabilities")
@@ -192,18 +239,50 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         println(vmind)
         println(findmax(real.(-v.D))[2])
 
+        println("wmax P:")
+        println(wmaxp)
+        println(findmax(real.(w.P))[2])
+        println("wmin P:")
+        println(wminp)
+        println(findmax(real.(-w.P))[2])
+        println("wmax C")
+        println(wmaxc)
+        println(findmax(real.(w.C))[2])
+        println("wmin C:")
+        println(wminc)
+        println(findmax(real.(-w.C))[2])
+        println("wmax D:")
+        println(wmaxd)
+        println(findmax(real.(w.D))[2])
+        println("wmin D:")
+        println(wmind)
+        println(findmax(real.(-w.D))[2])
+
         vmaxp   = maximum(abs.(v.P))
         vmaxc   = maximum(abs.(v.C))
         vmaxd   = maximum(abs.(v.D))
 
+        wmaxp   = maximum(abs.(w.P))
+        wmaxc   = maximum(abs.(w.C))
+        wmaxd   = maximum(abs.(w.D))
+
         if vmaxp>vstop
             Iter    = IterMax
-            println("P INSTABILITY!!!")
+            println("P INSTABILITY IN V!!!")
         elseif vmaxc>vstop
             Iter    = IterMax
-            println("C INSTABILITY!!!")
+            println("C INSTABILITY IN V!!!")
         elseif vmaxd>vstop
-            println("D INSTABILITY!!!")
+            println("D INSTABILITY IN V!!!")
+            Iter    = IterMax
+        elseif wmaxp>wstop
+            Iter    = IterMax
+            println("P INSTABILITY IN W!!!")
+        elseif wmaxc>wstop
+            Iter    = IterMax
+            println("C INSTABILITY IN W!!!")
+        elseif wmaxd>wstop
+            println("D INSTABILITY IN W!!!")
             Iter    = IterMax
         elseif Lambda<LambdaMin
             Iter    = IterMax
@@ -212,14 +291,17 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         end
 
         push!(LambdaArr,Lambda)
-        push!(pmax,vmaxp)
-        push!(cmax,vmaxc)
-        push!(dmax,vmaxd)
+        push!(pmaxv,vmaxp)
+        push!(cmaxv,vmaxc)
+        push!(dmaxv,vmaxd)
+        push!(pmaxw,wmaxp)
+        push!(cmaxw,wmaxc)
+        push!(dmaxw,wmaxd)
 
 
-        pL      = dLambda*findmax(abs.((increments.P)))[1]
-        cL      = dLambda*findmax(abs.((increments.C)))[1]
-        dL      = dLambda*findmax(abs.((increments.D)))[1]
+        pL      = dLambda*findmax(abs.((incrementsv.P)))[1]
+        cL      = dLambda*findmax(abs.((incrementsv.C)))[1]
+        dL      = dLambda*findmax(abs.((incrementsv.D)))[1]
         dLambda = min(0.05*Lambda, dLambda/(2*pL),dLambda/(2*cL),dLambda/(2*dL) )
 
 
@@ -228,9 +310,11 @@ steps have been calcul or if the scale 10.0^-4 is reached.
 
     end
 
-    return LambdaArr,pmax,cmax,dmax, BubblesGamma, BubblesM,increments
+    return LambdaArr,pmaxv,pmaxw,cmaxv,cmaxw,dmaxv,dmaxw, BubblesGamma, BubblesM,incrementsv, incrementsw
 end
 
+
+#gapper f
 @everywhere function gapper(v::vertices,grid_bosons::kgrid)
 
     c_sc    = Array{Complex{Float64},2}(undef,grid_bosons.N,grid_bosons.N)
