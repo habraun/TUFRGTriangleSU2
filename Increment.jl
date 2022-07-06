@@ -15,6 +15,9 @@
 	bufferWC	:: Array{Complex{Float64}, 2},
 	bufferWD 	:: Array{Complex{Float64}, 2}
 	)
+	# SU(Nsymm)xSU(Msymm)
+	Nsymm=2
+	Msymm=2
 
 	xpp	= bubbles.pp
 	xph	= bubbles.ph
@@ -44,22 +47,22 @@
 		@tensor begin
 			bufferVP[L1,L4]=  VP_qi[L1,L2]*xpp_qi[L2,L3]*VP_qi[L3,L4]+WP_qi[L1,L2]*xpp_qi[L2,L3]*WP_qi[L3,L4]
 			bufferVC[L1,L4]=  VC_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4]
-			bufferVD[L1,L4]=((VD_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])*(-4.0)#4.0 is n*m
-			        	+  1.0*(VC_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])
-				    	+  1.0*(VD_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4])
-						+  1.0*(WC_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])
-				    	+  1.0*(WD_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4])
-						+  (VD_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])*(-2.0) #n
-						+  (WD_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])*(-2.0) #n
-						+  2.0*(WC_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4]) #m
-						+  2.0*(VD_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4]) #m
+			bufferVD[L1,L4]=((VD_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])*(-Nsymm*Msymm)#4.0 is n*m 2 statt 4!!!
+			        	+  (VC_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])
+				    	+  (VD_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4])
+						+  (WC_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])
+				    	+  (WD_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4])
+						+  (VD_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])*(-Nsymm) #n
+						+  (WD_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])*(-Nsymm) #n
+						+  (WC_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])*(Msymm) #m
+						+  (VD_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4])*(Msymm) #m
 						) # add W equations only here it makes a difference
 
 			bufferWP[L1,L4]=  VP_qi[L1,L2]*xpp_qi[L2,L3]*WP_qi[L3,L4]+WP_qi[L1,L2]*xpp_qi[L2,L3]*VP_qi[L3,L4]
 			bufferWC[L1,L4]=  (VC_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4]
 						+  WC_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4]
-						+  WC_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4]*(-2.0)) #m
-			bufferWD[L1,L4]=(( WD_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])*(-2.0) #n
+						+  WC_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4]*(-Msymm)) #m
+			bufferWD[L1,L4]=(( WD_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])*(-Nsymm) #n
 						+  (WD_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4])
 						+  (VC_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])
 						) # add W equations only here it makes a difference
@@ -68,6 +71,7 @@
 		incrementsv.P[:,:,qi].=bufferVP.*1.0
 		incrementsv.C[:,:,qi].=bufferVC.*1.0
 		incrementsv.D[:,:,qi].=bufferVD.*1.0
+		#use here 0.0 if you want to neglect the "w-vertices"
 		incrementsw.P[:,:,qi].=bufferWP.*1.0
 		incrementsw.C[:,:,qi].=bufferWC.*1.0
 		incrementsw.D[:,:,qi].=bufferWD.*1.0
@@ -125,9 +129,9 @@ end
 	VC	= v.c0+v.cp+v.cd+v.C
 	VD	= v.d0+v.dc+v.dp+v.D
 
-	WP	= w.p0+w.pc+w.pd+w.P
-	WC	= w.c0+w.cp+w.cd+w.C
-	WD	= w.d0+w.dc+w.dp+w.D
+	WP	= (w.p0+w.pc+w.pd+w.P)
+	WC	= (w.c0+w.cp+w.cd+w.C)
+	WD	= (w.d0+w.dc+w.dp+w.D)
 
 	bufferVP	= similar(VP[:,:,1])
 	bufferVC	= similar(VC[:,:,1])
