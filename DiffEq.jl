@@ -22,7 +22,9 @@ steps have been calcul or if the scale 10.0^-4 is reached.
     v           ::vertices,
     fv          ::fouriervertices,
     w           ::vertices,
-    fw          ::fouriervertices
+    fw          ::fouriervertices,
+    Vh          ::Float64,
+    Kh          ::Float64
     )
 
     #Set initial conditions#####################################################
@@ -32,19 +34,19 @@ steps have been calcul or if the scale 10.0^-4 is reached.
 
 
     println("Set initial conditions")
-    v.p0[1,1,:] .=U
-    v.c0[1,1,:] .=U
-    v.d0[1,1,:] .=U
-    w.p0[1,1,:] .=U
-    w.c0[1,1,:] .=U
-    w.d0[1,1,:] .=U
+    v.p0[1,1,:] .=U+Vh/2+K/2
+    v.c0[1,1,:] .=U+Vh/2+K/2
+    v.d0[1,1,:] .=U+Vh/2+K/2
+    w.p0[1,1,:] .=Vh-K
+    w.c0[1,1,:] .=Vh-K
+    w.d0[1,1,:] .=Vh-K
 
     v2_Arr  = [10,11,14,15,18,19]
     v3_Arr  = [8,9,12,13,16,17]
 
     for m in 2:7
-        v.p0[m,m,:].+=(-J/4)
-        v.c0[m,m,:].+=(-J/4)
+        v.p0[m,m,:].+=(-J/8)
+        v.c0[m,m,:].+=(-J/8)
         v.d0[m,m,:].+=(-J/2)
 
         v.p0[m,m,:].+=V1
@@ -55,19 +57,6 @@ steps have been calcul or if the scale 10.0^-4 is reached.
 
         v.p0[v3_Arr[m-1],v3_Arr[m-1],:].+=V3
         v.c0[v3_Arr[m-1],v3_Arr[m-1],:].+=V3
-
-        w.p0[m,m,:].+=(-J/4)
-        w.c0[m,m,:].+=(-J/4)
-        w.d0[m,m,:].+=(-J/2)
-
-        w.p0[m,m,:].+=V1
-        w.c0[m,m,:].+=V1
-
-        w.p0[v2_Arr[m-1],v2_Arr[m-1],:].+=V2
-        w.c0[v2_Arr[m-1],v2_Arr[m-1],:].+=V2
-
-        w.p0[v3_Arr[m-1],v3_Arr[m-1],:].+=V3
-        w.c0[v3_Arr[m-1],v3_Arr[m-1],:].+=V3
     end
 
     #==
@@ -91,30 +80,19 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         v.p0[5,4,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[4],grid_r.r1,grid_r.r2)
         v.p0[6,7,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[7],grid_r.r1,grid_r.r2)
         v.p0[7,6,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[6],grid_r.r1,grid_r.r2)
-
-        w.p0[2,3,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[3],grid_r.r1,grid_r.r2)
-        w.p0[3,2,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[2],grid_r.r1,grid_r.r2)
-        w.p0[4,5,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[5],grid_r.r1,grid_r.r2)
-        w.p0[5,4,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[4],grid_r.r1,grid_r.r2)
-        w.p0[6,7,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[7],grid_r.r1,grid_r.r2)
-        w.p0[7,6,qi]+=-(J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[6],grid_r.r1,grid_r.r2)
     end
 
 
     for qi in 1:grid_bosons.N
         kx,ky=grid_bosons.grid[qi]
         for m in 2:7
-            #v.c0[1,1,qi]+=(-J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
-            #v.d0[1,1,qi]+=(-J/4)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
+            v.c0[1,1,qi]+=(-J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
+            v.d0[1,1,qi]+=(-J/8)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
             #v.d0[1,1,qi]+=V1*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
 
             v.d0[1,1,qi]+=V1*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
             v.d0[1,1,qi]+=V2*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[v2_Arr[m-1]],grid_r.r1,grid_r.r2)
             v.d0[1,1,qi]+=V3*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[v3_Arr[m-1]],grid_r.r1,grid_r.r2)
-
-            w.d0[1,1,qi]+=V1*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
-            w.d0[1,1,qi]+=V2*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[v2_Arr[m-1]],grid_r.r1,grid_r.r2)
-            w.d0[1,1,qi]+=V3*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[v3_Arr[m-1]],grid_r.r1,grid_r.r2)
 
             #spinlful
             #v.c0[1,1,qi]-=(V1/1)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
