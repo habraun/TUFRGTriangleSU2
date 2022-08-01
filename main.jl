@@ -35,11 +35,11 @@ function init_flow!(
         t       ::Float64,
         t2      ::Float64,
         t3      ::Float64,
-        mu       ::Float64,
+        mu      ::Float64,
         Gamma   ::Bool,
         M       ::Bool,
-        K      ::Bool,
-        shell   ::Int64
+        K       ::Bool,
+        shell   ::Int64,
         )
 
         L               = 1+3*shell + 3*shell^2
@@ -51,12 +51,10 @@ function init_flow!(
         fw              = fouriervertex_initialization(L,grid_r,shell)
         w               = vertex_initialization(L,grid_bosons.N)
 
-
         println("Momenta:")
         println(grid_bosons.N)
         println("Form factors:")
         println(L)
-
 
         #Calculate Flow
         LambdaArr,pmaxv,pmaxw,cmaxv,cmaxw,dmaxv,dmaxw,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv,w,fw)# add two arguments w and fw
@@ -120,6 +118,11 @@ function init_flow!(
                 write(file, "cmaxw", abs.(cmaxw))
                 write(file, "dmaxw", abs.(dmaxw))
 
+                write(file, "leadingvecs1111v", leadingvecsv)
+                write(file, "leadingvals1111v", leadingvalsv)
+                write(file, "leadingvecs1111w", leadingvecsw)
+                write(file, "leadingvals1111w", leadingvalsw)
+                
                 write(file, "Lambda", abs.(LambdaArr))
 
                 write(file,"idxlist",idxarr)
@@ -127,16 +130,17 @@ function init_flow!(
 
                 write(file,"BubblesGamma",BubblesGamma)
                 write(file,"BubblesM",BubblesM)
+                create_group(file,"Parameters")
+                write(file["Parameters"],"N",N)
+                write(file["Parameters"],"U",U)
+                write(file["Parameters"],"V1",V1)
+                write(file["Parameters"],"V2",V2)
+                write(file["Parameters"],"V3",V3)
+                write(file["Parameters"],"J",J)
+                write(file["Parameters"],"t",t)
+                write(file["Parameters"],"t2",t2)
+                write(file["Parameters"],"t3",t3)
+                write(file["Parameters"],"mu",mu)
+                write(file["Parameters"],"Shell",shell)
         end
-
-
-        h5open(outputdir+"triangleSC"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*".h5", "w") do file
-                write(file, "leadingvecs1111v", leadingvecsv)
-                write(file, "leadingvals1111v", leadingvalsv)
-                write(file, "leadingvecs1111w", leadingvecsw)
-                write(file, "leadingvals1111w", leadingvalsw)
-                write(file,"coords",coordsarr)
-        end
-
-
 end
