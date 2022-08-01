@@ -95,7 +95,9 @@ function init_flow!(
 
         leadingvalsv,leadingvecsv,scv,vPbuffv=gapper(v,grid_bosons) #double it, once on v once on w
         leadingvalsw,leadingvecsw,scw,vPbuffw=gapper(w,grid_bosons)
-
+        
+        outputdir="./data/"
+        
         jldopen(outputdir+"triangle"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*".jld", "w") do file
             write(file, "SCv", scv)  # alternatively, say "@write file A"
             write(file, "VPv", v.P)
