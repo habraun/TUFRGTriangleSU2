@@ -1,18 +1,28 @@
 @everywhere function fill_main_patch!(
-	increments	:: incrementvertices,
+	incrementsv	:: incrementvertices,
+	incrementsw :: incrementvertices,
 	bubbles		:: bubble,
 	VP			:: Array{Complex{Float64},3},
 	VC			:: Array{Complex{Float64},3},
 	VD			:: Array{Complex{Float64},3},
-	bufferP		:: Array{Complex{Float64}, 2},
-	bufferC		:: Array{Complex{Float64}, 2},
-	bufferD 	:: Array{Complex{Float64}, 2}
+	WP			:: Array{Complex{Float64},3},
+	WC			:: Array{Complex{Float64},3},
+	WD			:: Array{Complex{Float64},3},
+	bufferVP	:: Array{Complex{Float64}, 2},
+	bufferVC	:: Array{Complex{Float64}, 2},
+	bufferVD 	:: Array{Complex{Float64}, 2},
+	bufferWP	:: Array{Complex{Float64}, 2},
+	bufferWC	:: Array{Complex{Float64}, 2},
+	bufferWD 	:: Array{Complex{Float64}, 2}
 	)
+	# SU(Nsymm)xSU(Msymm)
+	Nsymm=2
+	Msymm=2
 
 	xpp	= bubbles.pp
 	xph	= bubbles.ph
 
-	N_m	= Int64((increments.N)/12)
+	N_m	= Int64((incrementsv.N)/12)
 
 	for qi in 1:N_m
 		xpp_qi	= xpp[:,:,qi]
@@ -22,28 +32,57 @@
 		VC_qi	= VC[:,:,qi]
 		VD_qi	= VD[:,:,qi]
 
-		bufferP.= 0.0+0.0*im
-		bufferC.= 0.0+0.0*im
-		bufferD.= 0.0+0.0*im
+		bufferVP.= 0.0+0.0*im
+		bufferVC.= 0.0+0.0*im
+		bufferVD.= 0.0+0.0*im
+
+		WP_qi	= WP[:,:,qi]
+		WC_qi	= WC[:,:,qi]
+		WD_qi	= WD[:,:,qi]
+
+		bufferWP.= 0.0+0.0*im
+		bufferWC.= 0.0+0.0*im
+		bufferWD.= 0.0+0.0*im
 
 		@tensor begin
-			bufferP[L1,L4]=  VP_qi[L1,L2]*xpp_qi[L2,L3]*VP_qi[L3,L4]
-			bufferC[L1,L4]=  VC_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4]
-			bufferD[L1,L4]=((VD_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])*(-2.0)
-			        	+  1.0*(VC_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])
-				    	+  1.0*(VD_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4]))
+			bufferVP[L1,L4]=  VP_qi[L1,L2]*xpp_qi[L2,L3]*VP_qi[L3,L4]+WP_qi[L1,L2]*xpp_qi[L2,L3]*WP_qi[L3,L4]
+			bufferVC[L1,L4]=  VC_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4]
+			bufferVD[L1,L4]=((VD_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])*(-Nsymm*Msymm)#4.0 is n*m 2 statt 4!!!
+			        	+  (VC_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])
+				    	+  (VD_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4])
+						+  (WC_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])
+				    	+  (WD_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4])
+						+  (VD_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])*(-Nsymm) #n
+						+  (WD_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])*(-Nsymm) #n
+						+  (WC_qi[L1,L2]*xph_qi[L2,L3]*VD_qi[L3,L4])*(Msymm) #m
+						+  (VD_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4])*(Msymm) #m
+						) # add W equations only here it makes a difference
+
+			bufferWP[L1,L4]=  VP_qi[L1,L2]*xpp_qi[L2,L3]*WP_qi[L3,L4]+WP_qi[L1,L2]*xpp_qi[L2,L3]*VP_qi[L3,L4]
+			bufferWC[L1,L4]=  (VC_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4]
+						+  WC_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4]
+						+  WC_qi[L1,L2]*xph_qi[L2,L3]*WC_qi[L3,L4]*(-Msymm)) #m
+			bufferWD[L1,L4]=(( WD_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])*(-Nsymm) #n
+						+  (WD_qi[L1,L2]*xph_qi[L2,L3]*VC_qi[L3,L4])
+						+  (VC_qi[L1,L2]*xph_qi[L2,L3]*WD_qi[L3,L4])
+						) # add W equations only here it makes a difference
 		end
 
-		increments.P[:,:,qi].=bufferP.*1.0
-		increments.C[:,:,qi].=bufferC.*1.0
-		increments.D[:,:,qi].=bufferD.*1.0
+		incrementsv.P[:,:,qi].=bufferVP.*1.0
+		incrementsv.C[:,:,qi].=bufferVC.*1.0
+		incrementsv.D[:,:,qi].=bufferVD.*1.0
+		#use here 0.0 if you want to neglect the "w-vertices"
+		incrementsw.P[:,:,qi].=bufferWP.*1.0
+		incrementsw.C[:,:,qi].=bufferWC.*1.0
+		incrementsw.D[:,:,qi].=bufferWD.*1.0
 
 	end
 end
 
 
 @everywhere function increment!(
-    increments  :: incrementvertices,
+    incrementsv  :: incrementvertices,
+	incrementsw  :: incrementvertices,
     bubbles     :: bubble,
     Lambda      :: Float64,
     t           :: Float64,
@@ -52,6 +91,8 @@ end
     mu          :: Float64,
     v           :: vertices,
     fv          :: fouriervertices,
+	w           :: vertices,
+    fw          :: fouriervertices,
     grid_bosons :: kgrid,
     grid_r      :: rgrid
     )
@@ -78,24 +119,37 @@ end
 
 	println("Calculate Projections")
     projection!(v,fv,grid_bosons,grid_r)
+	projection!(w,fw,grid_bosons,grid_r)
 
 
     xpp	= bubbles.pp
     xph	= bubbles.ph
+
 	VP	= v.p0+v.pc+v.pd+v.P
 	VC	= v.c0+v.cp+v.cd+v.C
 	VD	= v.d0+v.dc+v.dp+v.D
 
-	bufferP	= similar(VP[:,:,1])
-	bufferC	= similar(VC[:,:,1])
-	bufferD	= similar(VD[:,:,1])
+	WP	= (w.p0+w.pc+w.pd+w.P)
+	WC	= (w.c0+w.cp+w.cd+w.C)
+	WD	= (w.d0+w.dc+w.dp+w.D)
 
-    increments.P.=0.0+0.0*im
-    increments.C.=0.0+0.0*im
-    increments.D.=0.0+0.0*im
+	bufferVP	= similar(VP[:,:,1])
+	bufferVC	= similar(VC[:,:,1])
+	bufferVD	= similar(VD[:,:,1])
+
+	bufferWP	= similar(WP[:,:,1])
+	bufferWC	= similar(WC[:,:,1])
+	bufferWD	= similar(WD[:,:,1])
+
+    incrementsv.P.=0.0+0.0*im
+    incrementsv.C.=0.0+0.0*im
+    incrementsv.D.=0.0+0.0*im
+	incrementsw.P.=0.0+0.0*im
+    incrementsw.C.=0.0+0.0*im
+    incrementsw.D.=0.0+0.0*im
 
 	println("calculate main patch...")
-	fill_main_patch!(increments,bubbles,VP,VC,VD,bufferP,bufferC,bufferD)
+	fill_main_patch!(incrementsv, incrementsw,bubbles,VP,VC,VD,WP,WC,WD,bufferVP,bufferVC,bufferVD,bufferWP,bufferWC,bufferWD)
 
 end
 

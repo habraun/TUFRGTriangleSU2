@@ -1,6 +1,6 @@
 using Distributed
 rmprocs(workers())
-addprocs(4)
+addprocs(8)
 nworkers()
 
 

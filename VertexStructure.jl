@@ -1,7 +1,7 @@
 @everywhere struct vertices
     P::Array{Complex{Float64},3}
     C::Array{Complex{Float64},3}
-    D::Array{Complex{Float64},3}
+    D::Array{Complex{Float64},3} #p -> VP and WP
 
     p0::Array{Complex{Float64},3}
     c0::Array{Complex{Float64},3}
@@ -14,7 +14,7 @@
     cd::Array{Complex{Float64},3}
 
     dp::Array{Complex{Float64},3}
-    dc::Array{Complex{Float64},3}
+    dc::Array{Complex{Float64},3} # c on d! from right to left!, see projection.jl
 
     L   ::Int64
     N   ::Int64
@@ -27,8 +27,8 @@ end
     C::Array{Complex{Float64},3}
     D::Array{Complex{Float64},3}
 
-    L   ::Int64
-    N   ::Int64
+    L   ::Int64 #amount of ff
+    N   ::Int64 # amount of momenta
 
     vec2idx::Dict
 end
