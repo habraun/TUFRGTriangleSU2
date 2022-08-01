@@ -40,6 +40,8 @@ function init_flow!(
         M       ::Bool,
         K       ::Bool,
         shell   ::Int64,
+        Vh      ::Float64,
+        Kh      ::Float64
         )
 
         L               = 1+3*shell + 3*shell^2
@@ -57,7 +59,7 @@ function init_flow!(
         println(L)
 
         #Calculate Flow
-        LambdaArr,pmaxv,pmaxw,cmaxv,cmaxw,dmaxv,dmaxw,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv,w,fw)# add two arguments w and fw
+        LambdaArr,pmaxv,pmaxw,cmaxv,cmaxw,dmaxv,dmaxw,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv,w,fw,Vh,Kh)# add two arguments w and fw
 
         ################################################################################
         #prepare supplemental information for plotting
@@ -142,5 +144,7 @@ function init_flow!(
                 write(file["Parameters"],"t3",t3)
                 write(file["Parameters"],"mu",mu)
                 write(file["Parameters"],"Shell",shell)
+                write(file["Parameters"],"Vh",Vh)
+                write(file["Parameters"],"Kh",Kh)
         end
 end
