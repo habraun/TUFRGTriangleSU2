@@ -11,6 +11,6 @@
 #@ tasks_per_node=40
 #@ queue 
 
-module load julia
+module load julia/1.7.3
 which julia
 julia --startup-file=no ./start.jl
