@@ -57,7 +57,7 @@ function init_flow!(
 
 
         #Calculate Flow
-        LambdaArr,pmaxv,pmaxw,cmaxv,cmaxw,dmaxv,dmaxw,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv)# add two arguments w and fw
+        LambdaArr,pmaxv,cmaxv,dmaxv,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv)# add two arguments w and fw
 
         ################################################################################
         #prepare supplemental information for plotting
