@@ -194,9 +194,9 @@ end
         ff.*=(qxph*rho)
     end
     for i in 1:length(sites)
-        #init[i]                    += ff[i]
+        init[i]                    += ff[i]
         #for integration-check, keep commented
-        init[i]+=rho
+        #init[i]+=rho
     end
 end
 
@@ -313,7 +313,6 @@ end
     end
 end
 
-
 @everywhere function phiklapper(
     phi ::Float64
     )   ::Float64
@@ -337,7 +336,6 @@ end
 ################################################################################
 #############pocket integration routine, from K point###########################
 ################################################################################
-
 
 @everywhere function integrandPocket!(
     grid_bosons :: kgrid,
@@ -546,7 +544,7 @@ end
     channel     :: String
     )
     restot  .=0.0+0.0*im
-    offsets             =[pi/6+2*pi/3,  pi/6+3*pi/3,    pi/6+4*pi/3,    pi/6+5*pi/3,    pi/6+0*pi/3,    pi/2+1*pi/3]
+    offsets             =[pi/6+2*pi/3,  pi/6+3*pi/3,    pi/6+4*pi/3,    pi/6+5*pi/3,    pi/6+0*pi/3,    pi/6+1*pi/3]
     if mu<=2*(t+t2-3*t3)            # Hole like FermiSurface -left side intergration routine
         for j in 0:phiges-1             #Integration from Gamma, over Fermi-Surface to AZB
             deltaphi        =2*pi/phiges
@@ -571,7 +569,7 @@ end
         for j in 0:phiges-1         #Integration from Gamma to AZB
             deltaphi        =2*pi/phiges
             phi             =j*deltaphi
-            rhoAZB         =fermi_rho_finder(phi,t,t2,t3,2*(t+t2-3*t3))
+            rhoAZB          =fermi_rho_finder(phi,t,t2,t3,2*(t+t2-3*t3))
             deltamax        =rhoAZB/Nges
 
             for i in 0:Nges-1
