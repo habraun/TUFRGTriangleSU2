@@ -37,14 +37,18 @@ Gamma   = false                 #Set to "true" for higher momentum resolution at
 M       = true
 K       = false
 shell   = 4                     #Hexagon shell of form factors. shell=2 equaios 19 form factors, which is the minimum one should use
+
 Vh      = 0.1
 Kh      = 0.0
+
 phifaktor= 3
 
 
 #start flow
 for U in [1.0,1.5,2.0,2.5,3.0,3.5]
     for mu in 1.95:0.005:2.05
+
         init_flow!(N,U,V1,V2,V3,J,t,t2,t3,mu,Gamma,M,K,shell,Vh,Kh,phifaktor)
+
     end
 end

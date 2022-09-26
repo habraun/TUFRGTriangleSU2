@@ -40,9 +40,11 @@ function init_flow!(
         M       ::Bool,
         K       ::Bool,
         shell   ::Int64,
+
         Vh      ::Float64,
         Kh      ::Float64,
-	phifaktor ::Int64
+	      phifaktor ::Int64
+
         )
 
         L               = 1+3*shell + 3*shell^2
@@ -51,16 +53,20 @@ function init_flow!(
         grid_r          = rgrid_initialization(Int64(ceil(sqrt(grid_bosons.N))))
         fv              = fouriervertex_initialization(L,grid_r,shell) #fw
         v               = vertex_initialization(L,grid_bosons.N)
+
         fw              = fouriervertex_initialization(L,grid_r,shell)
         w               = vertex_initialization(L,grid_bosons.N)
 
-	println("")
+	      println("")
+
         println("Momenta: ",grid_bosons.N)
         println("Form factors: ", L)
 
 
         #Calculate Flow
+
         LambdaArr,pmaxv,pmaxw,cmaxv,cmaxw,dmaxv,dmaxw,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv,w,fw,Vh,Kh,phifaktor)# add two arguments w and fw
+
 
         ################################################################################
         #prepare supplemental information for plotting
@@ -95,28 +101,35 @@ function init_flow!(
         #Use superconducting vertex c_sc to calculate leading gap functions
 
         leadingvalsv,leadingvecsv,scv,vPbuffv=gapper(v,grid_bosons)
+
         leadingvalsw,leadingvecsw,scw,vPbuffw=gapper(w,grid_bosons)
+
 
         jldopen("triangle"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*string(phifaktor)*".jld", "w") do file
             write(file, "SCv", scv)  # alternatively, say "@write file A"
             write(file, "VPv", v.P)
             write(file, "VPbuffv", vPbuffv)
+
             write(file, "SCw", scw)  # alternatively, say "@write file A"
             write(file, "VPw", w.P)
             write(file, "VPbuffw", vPbuffw)
+
         end
 
         h5open("triangle_N_"*string(N)*"_U_"*string(U)*"_V1_"*string(V1)*"_V2_"*string(V2)*"_V3_"*string(V3)*"_J_"*string(J)*"_t_"*string(round(t,digits=3))*"_t2_"*string(round(t2,digits=3))*"_t3_"*string(round(t3,digits=3))*"_mu_"*string(round(mu,digits=3))*"_Gam_"*string(Gamma)*"_M_"*string(M)*"_K_"*string(K)*"_Sh_"*string(shell)*"_phifaktor_"*string(phifaktor)*".h5", "w") do file
                 write(file, "pv", real.(v.P)) # save also w etc.
                 write(file, "cv", real.(v.C))
                 write(file, "dv", real.(v.D))
+
                 write(file, "pw", real.(w.P)) # save also w etc.
                 write(file, "cw", real.(w.C))
                 write(file, "dw", real.(w.D))
 
+
                 write(file, "pmaxv", abs.(pmaxv))
                 write(file, "cmaxv", abs.(cmaxv))
                 write(file, "dmaxv", abs.(dmaxv))
+
                 write(file, "pmaxw", abs.(pmaxw))
                 write(file, "cmaxw", abs.(cmaxw))
                 write(file, "dmaxw", abs.(dmaxw))
@@ -125,6 +138,7 @@ function init_flow!(
                 write(file, "leadingvals1111v", leadingvalsv)
                 write(file, "leadingvecs1111w", leadingvecsw)
                 write(file, "leadingvals1111w", leadingvalsw)
+
 
                 write(file, "Lambda", abs.(LambdaArr))
 
@@ -145,7 +159,8 @@ function init_flow!(
                 write(file["Parameters"],"t3",t3)
                 write(file["Parameters"],"mu",mu)
                 write(file["Parameters"],"Shell",shell)
-		write(file["Parameters"],"phifaktor",phifaktor)
+                write(file["Parameters"],"phifaktor",phifaktor)
         end
-	println("run finished")
+	      println("run finished")
 end
+
