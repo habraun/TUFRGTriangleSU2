@@ -1,6 +1,7 @@
+
 using Distributed
 rmprocs(workers())
-addprocs(8)
+addprocs(256)
 nworkers()
 
 
@@ -40,6 +41,7 @@ function init_flow!(
         M       ::Bool,
         K       ::Bool,
         shell   ::Int64,
+		phifaktor ::Int64
         )
 
         L               = 1+3*shell + 3*shell^2
@@ -47,17 +49,15 @@ function init_flow!(
         bubbles         = bubbles_initialization(L,grid_bosons.N,shell)
         grid_r          = rgrid_initialization(Int64(ceil(sqrt(grid_bosons.N))))
         fv              = fouriervertex_initialization(L,grid_r,shell) #fw
-        v               = vertex_initialization(L,grid_bosons.N) 
+        v               = vertex_initialization(L,grid_bosons.N)
 
-
-        println("Momenta:")
-        println(grid_bosons.N)
-        println("Form factors:")
-        println(L)
+		println("")
+        println("Momenta: ",grid_bosons.N)
+        println("Form factors: ", L)
 
 
         #Calculate Flow
-        LambdaArr,pmaxv,cmaxv,dmaxv,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv)# add two arguments w and fw
+        LambdaArr,pmaxv,cmaxv,dmaxv,BubblesGamma,BubblesM = start_flow(t,t2,t3,mu,U,V1,V2,V3,J,grid_bosons,bubbles,grid_r,v,fv,phifaktor)# add two arguments w and fw
 
         ################################################################################
         #prepare supplemental information for plotting
@@ -93,13 +93,13 @@ function init_flow!(
 
         leadingvalsv,leadingvecsv,scv,vPbuffv=gapper(v,grid_bosons)
 
-        jldopen("data/triangle"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*".jld", "w") do file
+        jldopen("triangle"*string(N)*string(U)*string(V1)*string(V2)*string(V3)*string(J)*string(round(t,digits=3))*string(round(t2,digits=3))*string(round(t3,digits=3))*string(round(mu,digits=3))*string(Gamma)*string(M)*string(K)*string(shell)*string(phifaktor)*".jld", "w") do file
             write(file, "SCv", scv)  # alternatively, say "@write file A"
             write(file, "VPv", v.P)
             write(file, "VPbuffv", vPbuffv)
         end
 
-        h5open("data/triangle_N_"*string(N)*"_U_"*string(U)*"_V1_"*string(V1)*"_V2_"*string(V2)*"_V3_"*string(V3)*"_J_"*string(J)*"_t_"*string(round(t,digits=3))*"_t2_"*string(round(t2,digits=3))*"_t3_"*string(round(t3,digits=3))*"_mu_"*string(round(mu,digits=3))*"_Gam_"*string(Gamma)*"_M_"*string(M)*"_K_"*string(K)*"_Sh_"*string(shell)*".h5", "w") do file
+        h5open("triangle_N_"*string(N)*"_U_"*string(U)*"_V1_"*string(V1)*"_V2_"*string(V2)*"_V3_"*string(V3)*"_J_"*string(J)*"_t_"*string(round(t,digits=3))*"_t2_"*string(round(t2,digits=3))*"_t3_"*string(round(t3,digits=3))*"_mu_"*string(round(mu,digits=3))*"_Gam_"*string(Gamma)*"_M_"*string(M)*"_K_"*string(K)*"_Sh_"*string(shell)*"_phifaktor_"*string(phifaktor)*".h5", "w") do file
                 write(file, "pv", real.(v.P)) # save also w etc.
                 write(file, "cv", real.(v.C))
                 write(file, "dv", real.(v.D))
@@ -130,6 +130,8 @@ function init_flow!(
                 write(file["Parameters"],"t3",t3)
                 write(file["Parameters"],"mu",mu)
                 write(file["Parameters"],"Shell",shell)
+				write(file["Parameters"],"phifaktor",phifaktor)
         end
-
+	println("run finished")
 end
+

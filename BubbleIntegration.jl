@@ -383,7 +383,7 @@ end
 
     Mlambda=lambdabands(values1,values2,Lambda,channel)
 
-    if channel == "pp"
+    if channel == "pp"an’t automatically merge. Don’t worry, you can still cre
         qxpp -= Mlambda
     elseif channel == "ph"
         qxph += Mlambda
@@ -510,7 +510,7 @@ end
 
         if (all(check == true) || all(check2==true))
             res     .=buff1
-            breakk  =k
+            breakk  =kan’t automatically merge. Don’t worry, you can still cre
             k       =kmax+1
         else
             buff1   .=res
@@ -539,13 +539,15 @@ end
     t2          :: Float64,
     t3          :: Float64,
     mu          :: Float64,
-    ff          :: Array{Complex{Float64}},
+    ff  an’t automatically merge. Don’t worry, you can still cre        :: Array{Complex{Float64}},
     sites       :: Array,
     channel     :: String
     )
     restot  .=0.0+0.0*im
-    offsets             =[pi/6+2*pi/3,  pi/6+3*pi/3,    pi/6+4*pi/3,    pi/6+5*pi/3,    pi/6+0*pi/3,    pi/6+1*pi/3]
-    if mu<=2*(t+t2-3*t3)            # Hole like FermiSurface -left side intergration routine
+
+    offsets                 =[pi/6+2*pi/3,  pi/6+3*pi/3,    pi/6+4*pi/3,    pi/6+5*pi/3,    pi/6+0*pi/3,    pi/6+1*pi/3]
+    if mu<2*(t+t2-3*t3)            # Hole like FermiSurface -left side intergration routine
+
         for j in 0:phiges-1             #Integration from Gamma, over Fermi-Surface to AZB
             deltaphi        =2*pi/phiges
             phi             =j*deltaphi
@@ -556,13 +558,30 @@ end
             deltamax        =rhoF/Nges
             for i in 0:Nges-1               #from Gamma to Fermi surface
                 LineIntegration!(grid_bosons,bubbles,i*deltamax,(i+1)*deltamax,phi, kmax,res,init,buff1,rtol,atol,qb,Lambda,t,t2,t3,mu,ff,sites,channel)
+
                 restot.+=(res.*deltaphi)
             end
 
-            deltamax        =(rhomax-rhoF)/Nges #change here if u want to use the pocekt integration!
+            deltamax        =(rhoAZB-rhoF)/Nges
             for i in 0:Nges-1               #from Fermi surface to AZB
                 LineIntegration!(grid_bosons,bubbles,rhoF+i*deltamax,rhoF+(i+1)*deltamax,phi, kmax,res,init,buff1,rtol,atol,qb,Lambda,t,t2,t3,mu,ff,sites,channel)
                 restot.+=(res.*deltaphi)
+            end
+        end
+        for angle in 0:5                #from Dirac to AZB (note the direction!)
+            for j in 0:Int64(phiges/6)
+                deltaphi        =2*pi*(1/3)/(Int64(phiges/6))
+                phi_weight      =2*pi*(1/3)/(Int64(phiges/6)+1)
+                phi             =j*deltaphi + offsets[angle+1]
+
+                rhoAZBDirac     =fermi_rho_finderDirac(angle,phi,t,t2,t3,2*(t+t2-3*t3))
+                deltamax        =rhoAZBDirac/Nges
+
+                for i in 0:Nges-1
+                    LineIntegrationPocket!(grid_bosons,bubbles,angle,i*deltamax,(i+1)*deltamax,phi, kmax,res,init,buff1,rtol,atol,qb,Lambda,t,t2,t3,mu,ff,sites,channel)
+                    restot.+=(res.*phi_weight)
+                end
+
             end
         end
     else                            # Pocket like FermiSurface -right side intergration routine (as before)

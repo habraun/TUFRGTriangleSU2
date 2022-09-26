@@ -20,7 +20,8 @@ steps have been calcul or if the scale 10.0^-4 is reached.
     bubbles     ::bubble,
     grid_r      ::rgrid,
     v           ::vertices,
-    fv          ::fouriervertices
+    fv          ::fouriervertices,
+    phifaktor      ::Int64
     )
 
     #Set initial conditions#####################################################
@@ -102,10 +103,8 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         push!(energiesC,e)
     end
 
-    println("bandwidth:")
-    println(findmax(energiesC)[1]-findmin(energiesC)[1])
-    println("Initial scale is now:")
-    println((findmax(energiesC)[1]-findmin(energiesC)[1])*1.05  )
+    println("bandwidth: ",findmax(energiesC)[1]-findmin(energiesC)[1])
+    println("Initial scale is now :", (findmax(energiesC)[1]-findmin(energiesC)[1])*1.05)
     println(" ")
     ################################################################################
 
@@ -145,18 +144,18 @@ steps have been calcul or if the scale 10.0^-4 is reached.
 
         println(" ")
         println(" ")
-        println(Iter)
+        println("Iteration: ",Iter)
 
         println("Set flow parameters")
         Lambda  = Lambda-dLambda
-        println(Lambda)
-        println(dLambda)
+        println("Lambda: ",Lambda)
+        println("dLambda: ",dLambda)
 
         println(" ")
         println("Calculate Increment")
 
 
-        increment!(increments,bubbles,Lambda,t,t2,t3,mu,v,fv,grid_bosons,grid_r)
+        increment!(increments,bubbles,Lambda,t,t2,t3,mu,v,fv,grid_bosons,grid_r,phifaktor)
 
         v.P .+= increments.P.*dLambda
         v.C .+= increments.C.*dLambda
@@ -173,24 +172,13 @@ steps have been calcul or if the scale 10.0^-4 is reached.
 
 
         println("Check for instabilities")
-        println("vmax P:")
-        println(vmaxp)
-        println(findmax(real.(v.P))[2])
-        println("vmin P:")
-        println(vminp)
-        println(findmax(real.(-v.P))[2])
-        println("vmax C")
-        println(vmaxc)
-        println(findmax(real.(v.C))[2])
-        println("vmin C:")
-        println(vminc)
-        println(findmax(real.(-v.C))[2])
-        println("vmax D:")
-        println(vmaxd)
-        println(findmax(real.(v.D))[2])
-        println("vmin D:")
-        println(vmind)
-        println(findmax(real.(-v.D))[2])
+        println("vmax P: ", vmaxp, " at ", findmax(real.(v.P))[2])
+        println("vmin P: ", vminp, " at ", findmin(real.(-v.P))[2])
+        println("vmax C: ", vmaxc, " at ", findmax(real.(v.C))[2])
+        println("vmin C: ", vminc, " at ", findmin(real.(-v.C))[2])
+        println("vmax D: ", vmaxd, " at ", findmax(real.(v.D))[2])
+        println("vmin D: ", vmind, " at ", findmin(real.(-v.D))[2])
+
 
         vmaxp   = maximum(abs.(v.P))
         vmaxc   = maximum(abs.(v.C))

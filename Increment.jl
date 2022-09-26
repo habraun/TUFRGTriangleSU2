@@ -53,7 +53,8 @@ end
     v           :: vertices,
     fv          :: fouriervertices,
     grid_bosons :: kgrid,
-    grid_r      :: rgrid
+    grid_r      :: rgrid,
+	phifaktor	:: Int64
     )
 
 	L			= bubbles.L
@@ -64,15 +65,8 @@ end
 	println("Calculate Bubbles")
 	faktor=Int64(ceil(log(10,10/Lambda)))
 
-	if mu<=2*(t+t2-3*t3)
-		phifaktor=1
-	else
-		phifaktor=3
-	end
 
-	println("Resolution:")
-	println("Radial: "*string(3*(2^faktor)))
-	println("Angular: "*string(phifaktor*120))
+	println("Resolution: ", "Radial: ", string(3*(2^faktor))," Angular: "*string(phifaktor*120))
 	fill_bubblesadaptive!(bubbles,grid_bosons,Lambda,t,t2,t3,mu,phifaktor*96,3*(2^faktor))
 
 
