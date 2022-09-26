@@ -1,4 +1,3 @@
-
 using Pkg
 
 #==
@@ -24,7 +23,7 @@ include("main.jl")
 
 #Set parameters, example parameters are for simple t-U Hubbard model at Van Hove filling
 
-N       = 4                     #Selects momentum resolution, e.g. N=4 equals 180 points, N=5 equals 336 points, N=6 equals 768 points
+N       = 8                     #Selects momentum resolution, e.g. N=4 equals 180 points, N=5 equals 336 points, N=6 equals 768 points
 U       = 4.0                   #Hubbard Interaction
 V1      = 0.0                   #Nearest, n-nearest and n-n-nearest neigbhbour Interactions
 V2      = 0.0
@@ -35,10 +34,15 @@ t2      = 0.0
 t3      = 0.0
 mu      = 2.0                   #Chemical potential
 Gamma   = false                 #Set to "true" for higher momentum resolution at Gamma,M or K point.
-M       = false
+M       = true
 K       = false
-shell   = 2                     #Hexagon shell of form factors. shell=2 equaios 19 form factors, which is the minimum one should use
+shell   = 4                     #Hexagon shell of form factors. shell=2 equaios 19 form factors, which is the minimum one should use
+phifaktor= 3
 
 
 #start flow
-init_flow!(N,U,V1,V2,V3,J,t,t2,t3,mu,Gamma,M,K,shell)
+for U in [1.0,1.5,2.0,2.5,3.0,3.5]
+    for mu in 1.95:0.005:2.05
+        init_flow!(N,U,V1,V2,V3,J,t,t2,t3,mu,Gamma,M,K,shell,phifaktor)
+    end
+end

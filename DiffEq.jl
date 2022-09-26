@@ -21,10 +21,7 @@ steps have been calcul or if the scale 10.0^-4 is reached.
     grid_r      ::rgrid,
     v           ::vertices,
     fv          ::fouriervertices,
-    w           ::vertices,
-    fw          ::fouriervertices,
-    Vh          ::Float64,
-    Kh          ::Float64
+    phifaktor      ::Int64
     )
 
     #Set initial conditions#####################################################
@@ -34,19 +31,16 @@ steps have been calcul or if the scale 10.0^-4 is reached.
 
 
     println("Set initial conditions")
-    v.p0[1,1,:] .=U+Vh/2+K/2
-    v.c0[1,1,:] .=U+Vh/2+K/2
-    v.d0[1,1,:] .=U+Vh/2+K/2
-    w.p0[1,1,:] .=Vh-K
-    w.c0[1,1,:] .=Vh-K
-    w.d0[1,1,:] .=Vh-K
+    v.p0[1,1,:] .=U
+    v.c0[1,1,:] .=U
+    v.d0[1,1,:] .=U
 
     v2_Arr  = [10,11,14,15,18,19]
     v3_Arr  = [8,9,12,13,16,17]
 
     for m in 2:7
-        v.p0[m,m,:].+=(-J/8)
-        v.c0[m,m,:].+=(-J/8)
+        v.p0[m,m,:].+=(-J/4)
+        v.c0[m,m,:].+=(-J/4)
         v.d0[m,m,:].+=(-J/2)
 
         v.p0[m,m,:].+=V1
@@ -86,8 +80,8 @@ steps have been calcul or if the scale 10.0^-4 is reached.
     for qi in 1:grid_bosons.N
         kx,ky=grid_bosons.grid[qi]
         for m in 2:7
-            v.c0[1,1,qi]+=(-J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
-            v.d0[1,1,qi]+=(-J/8)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
+            #v.c0[1,1,qi]+=(-J/2)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
+            #v.d0[1,1,qi]+=(-J/4)*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
             #v.d0[1,1,qi]+=V1*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
 
             v.d0[1,1,qi]+=V1*get_formfactor_explicit(kx,ky,grid_bosons.formfactorgrid[m],grid_r.r1,grid_r.r2)
@@ -109,10 +103,8 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         push!(energiesC,e)
     end
 
-    println("bandwidth:")
-    println(findmax(energiesC)[1]-findmin(energiesC)[1])
-    println("Initial scale is now:")
-    println((findmax(energiesC)[1]-findmin(energiesC)[1])*1.05  )
+    println("bandwidth: ",findmax(energiesC)[1]-findmin(energiesC)[1])
+    println("Initial scale is now :", (findmax(energiesC)[1]-findmin(energiesC)[1])*1.05)
     println(" ")
     ################################################################################
 
@@ -123,21 +115,16 @@ steps have been calcul or if the scale 10.0^-4 is reached.
     IterMax     = 400
     LambdaMin   = 10.0^-6
     vstop       = (findmax(energiesC)[1]-findmin(energiesC)[1])*3.0
-    wstop       = vstop
 
     Lambda      = (findmax(energiesC)[1]-findmin(energiesC)[1])*1.05
     dLambda     = 0.05*Lambda
 
-    incrementsv  = incrementvertices_initialization(bubbles.L,grid_bosons.N)
-    incrementsw  = incrementvertices_initialization(bubbles.L,grid_bosons.N)
+    increments  = incrementvertices_initialization(bubbles.L,grid_bosons.N)
 
     LambdaArr   = []
-    pmaxv        = []
-    cmaxv        = []
-    dmaxv        = []
-    pmaxw        = []
-    cmaxw        = []
-    dmaxw        = []
+    pmax        = []
+    cmax        = []
+    dmax        = []
 
     inc         = []
 
@@ -157,30 +144,24 @@ steps have been calcul or if the scale 10.0^-4 is reached.
 
         println(" ")
         println(" ")
-        println(Iter)
+        println("Iteration: ",Iter)
 
         println("Set flow parameters")
         Lambda  = Lambda-dLambda
-        println(Lambda)
-        println(dLambda)
+        println("Lambda: ",Lambda)
+        println("dLambda: ",dLambda)
 
         println(" ")
         println("Calculate Increment")
 
 
-        increment!(incrementsv,incrementsw,bubbles,Lambda,t,t2,t3,mu,v,fv,w,fw,grid_bosons,grid_r)
+        increment!(increments,bubbles,Lambda,t,t2,t3,mu,v,fv,grid_bosons,grid_r,phifaktor)
 
-        v.P .+= incrementsv.P.*dLambda
-        v.C .+= incrementsv.C.*dLambda
-        v.D .+= incrementsv.D.*dLambda
-
-        w.P .+= incrementsw.P.*dLambda
-        w.C .+= incrementsw.C.*dLambda
-        w.D .+= incrementsw.D.*dLambda
+        v.P .+= increments.P.*dLambda
+        v.C .+= increments.C.*dLambda
+        v.D .+= increments.D.*dLambda
 
         Vsymmetrizer!(v,bubbles,grid_bosons)
-        Vsymmetrizer!(w,bubbles,grid_bosons)
-
 
         vmaxp   = maximum(real.(v.P))
         vminp   = maximum(real.(-v.P))
@@ -189,78 +170,28 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         vmaxd   = maximum(real.(v.D))
         vmind   = maximum(real.(-v.D))
 
-        wmaxp   = maximum(real.(w.P))
-        wminp   = maximum(real.(-w.P))
-        wmaxc   = maximum(real.(w.C))
-        wminc   = maximum(real.(-w.C))
-        wmaxd   = maximum(real.(w.D))
-        wmind   = maximum(real.(-w.D))
-
 
         println("Check for instabilities")
-        println("vmax P:")
-        println(vmaxp)
-        println(findmax(real.(v.P))[2])
-        println("vmin P:")
-        println(vminp)
-        println(findmax(real.(-v.P))[2])
-        println("vmax C")
-        println(vmaxc)
-        println(findmax(real.(v.C))[2])
-        println("vmin C:")
-        println(vminc)
-        println(findmax(real.(-v.C))[2])
-        println("vmax D:")
-        println(vmaxd)
-        println(findmax(real.(v.D))[2])
-        println("vmin D:")
-        println(vmind)
-        println(findmax(real.(-v.D))[2])
+        println("vmax P: ", vmaxp, " at ", findmax(real.(v.P))[2])
+        println("vmin P: ", vminp, " at ", findmin(real.(-v.P))[2])
+        println("vmax C: ", vmaxc, " at ", findmax(real.(v.C))[2])
+        println("vmin C: ", vminc, " at ", findmin(real.(-v.C))[2])
+        println("vmax D: ", vmaxd, " at ", findmax(real.(v.D))[2])
+        println("vmin D: ", vmind, " at ", findmin(real.(-v.D))[2])
 
-        println("wmax P:")
-        println(wmaxp)
-        println(findmax(real.(w.P))[2])
-        println("wmin P:")
-        println(wminp)
-        println(findmax(real.(-w.P))[2])
-        println("wmax C")
-        println(wmaxc)
-        println(findmax(real.(w.C))[2])
-        println("wmin C:")
-        println(wminc)
-        println(findmax(real.(-w.C))[2])
-        println("wmax D:")
-        println(wmaxd)
-        println(findmax(real.(w.D))[2])
-        println("wmin D:")
-        println(wmind)
-        println(findmax(real.(-w.D))[2])
 
         vmaxp   = maximum(abs.(v.P))
         vmaxc   = maximum(abs.(v.C))
         vmaxd   = maximum(abs.(v.D))
 
-        wmaxp   = maximum(abs.(w.P))
-        wmaxc   = maximum(abs.(w.C))
-        wmaxd   = maximum(abs.(w.D))
-
         if vmaxp>vstop
             Iter    = IterMax
-            println("P INSTABILITY IN V!!!")
+            println("P INSTABILITY!!!")
         elseif vmaxc>vstop
             Iter    = IterMax
-            println("C INSTABILITY IN V!!!")
+            println("C INSTABILITY!!!")
         elseif vmaxd>vstop
-            println("D INSTABILITY IN V!!!")
-            Iter    = IterMax
-        elseif wmaxp>wstop
-            Iter    = IterMax
-            println("P INSTABILITY IN W!!!")
-        elseif wmaxc>wstop
-            Iter    = IterMax
-            println("C INSTABILITY IN W!!!")
-        elseif wmaxd>wstop
-            println("D INSTABILITY IN W!!!")
+            println("D INSTABILITY!!!")
             Iter    = IterMax
         elseif Lambda<LambdaMin
             Iter    = IterMax
@@ -269,17 +200,14 @@ steps have been calcul or if the scale 10.0^-4 is reached.
         end
 
         push!(LambdaArr,Lambda)
-        push!(pmaxv,vmaxp)
-        push!(cmaxv,vmaxc)
-        push!(dmaxv,vmaxd)
-        push!(pmaxw,wmaxp)
-        push!(cmaxw,wmaxc)
-        push!(dmaxw,wmaxd)
+        push!(pmax,vmaxp)
+        push!(cmax,vmaxc)
+        push!(dmax,vmaxd)
 
 
-        pL      = dLambda*findmax(abs.((incrementsv.P)))[1]
-        cL      = dLambda*findmax(abs.((incrementsv.C)))[1]
-        dL      = dLambda*findmax(abs.((incrementsv.D)))[1]
+        pL      = dLambda*findmax(abs.((increments.P)))[1]
+        cL      = dLambda*findmax(abs.((increments.C)))[1]
+        dL      = dLambda*findmax(abs.((increments.D)))[1]
         dLambda = min(0.05*Lambda, dLambda/(2*pL),dLambda/(2*cL),dLambda/(2*dL) )
 
 
@@ -288,11 +216,9 @@ steps have been calcul or if the scale 10.0^-4 is reached.
 
     end
 
-    return LambdaArr,pmaxv,pmaxw,cmaxv,cmaxw,dmaxv,dmaxw, BubblesGamma, BubblesM,incrementsv, incrementsw
+    return LambdaArr,pmax,cmax,dmax, BubblesGamma, BubblesM,increments
 end
 
-
-#gapper f
 @everywhere function gapper(v::vertices,grid_bosons::kgrid)
 
     c_sc    = Array{Complex{Float64},2}(undef,grid_bosons.N,grid_bosons.N)
