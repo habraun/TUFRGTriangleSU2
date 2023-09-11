@@ -19,7 +19,7 @@ end
 #Load Tufrg code
 include("main.jl")
 
-
+#githubtest
 
 #Set parameters, example parameters are for simple t-U Hubbard model at Van Hove filling
 
